@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 
 public class DataVisualization {
@@ -52,21 +53,30 @@ public class DataVisualization {
         System.out.println("数据来源: Department of Government Efficiency, Good job Musk");
     }
 
-    // 创建 GUI 界面
+    // 创建 GUI 界面（深色主题）
     private static void createAndShowGUI(List<String[]> data) {
         JFrame frame = new JFrame("联邦政府数据可视化");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 600);
+        frame.getContentPane().setBackground(Color.BLACK);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.BLACK);
         
-        // 表格面板
+        // 表格面板（深色主题）
         String[] columnNames = {"字段名称", "值"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
         JTable table = new JTable(tableModel);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        table.setRowHeight(25); // 提高行高，提升可读性
+        table.setRowHeight(25);
+        table.setBackground(Color.DARK_GRAY);
+        table.setForeground(Color.WHITE);
+        table.setGridColor(Color.LIGHT_GRAY);
+        
+        JTableHeader tableHeader = table.getTableHeader();
+        tableHeader.setBackground(Color.BLACK);
+        tableHeader.setForeground(Color.WHITE);
 
         for (String[] row : data) {
             if (row.length >= 2) {
@@ -78,13 +88,17 @@ public class DataVisualization {
 
         // 统计面板
         JLabel statsLabel = new JLabel("数据项总数: " + data.size());
+        statsLabel.setForeground(Color.WHITE);
         JPanel statsPanel = new JPanel();
+        statsPanel.setBackground(Color.BLACK);
         statsPanel.add(statsLabel);
         mainPanel.add(statsPanel, BorderLayout.NORTH);
         
         // 详细信息面板
         JTextArea detailsText = new JTextArea(5, 50);
         detailsText.setEditable(false);
+        detailsText.setBackground(Color.DARK_GRAY);
+        detailsText.setForeground(Color.WHITE);
         JScrollPane detailsScroll = new JScrollPane(detailsText);
         mainPanel.add(detailsScroll, BorderLayout.SOUTH);
         
@@ -122,20 +136,21 @@ public class DataVisualization {
     }
 }
 
-// 自定义柱状图面板
+// 自定义柱状图面板（白色柱状图）
 class ChartPanel extends JPanel {
     private final List<String[]> data;
     
     public ChartPanel(List<String[]> data) {
         this.data = data;
         this.setPreferredSize(new Dimension(350, 400));
+        this.setBackground(Color.BLACK);
     }
     
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        g2d.setColor(Color.WHITE);
 
         int width = getWidth();
         int height = getHeight();
@@ -153,13 +168,7 @@ class ChartPanel extends JPanel {
             try {
                 int value = Integer.parseInt(data.get(i)[1]);
                 int barHeight = (int) ((double) value / maxValue * (height - 50));
-                g2d.setColor(new Color(0, 0, 255 - (i * 20)));
                 g2d.fillRect(x, height - barHeight - 10, barWidth - 5, barHeight);
-                g2d.setColor(Color.BLACK);
-                g2d.drawRect(x, height - barHeight - 10, barWidth - 5, barHeight);
-                if (i % 2 == 0) {
-                    g2d.drawString(data.get(i)[0], x, height - 5);
-                }
                 x += barWidth;
             } catch (NumberFormatException ignored) {}
         }
