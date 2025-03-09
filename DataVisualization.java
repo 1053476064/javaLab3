@@ -13,46 +13,46 @@ import javax.swing.table.TableRowSorter;
 
 public class DataVisualization {
     public static void main(String[] args) {
-        // 读取数据文件
+        // Read data file
         String filePath = "org-data-Federal_Government.csv";
         List<String[]> data = readCSV(filePath);
         
-        // 控制台测试输出
+        // Console test output
         consoleTest(data);
         
-        // 启动 GUI 界面
+        // Launch GUI
         SwingUtilities.invokeLater(() -> createAndShowGUI(data));
     }
 
     private static List<String[]> readCSV(String filePath) {
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-            return lines.skip(1) // 跳过表头
+            return lines.skip(1) // Skip header
                     .map(line -> line.split(","))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            System.err.println("文件读取失败: " + e.getMessage());
+            System.err.println("File read failed: " + e.getMessage());
             return List.of();
         }
     }
 
     private static void consoleTest(List<String[]> data) {
         if (data.isEmpty()) {
-            System.out.println("数据为空，无法进行测试");
+            System.out.println("No data available for testing");
             return;
         }
         
-        System.out.println("第一条数据: " + String.join(", ", data.get(0)));
+        System.out.println("First data entry: " + String.join(", ", data.get(0)));
         if (data.size() >= 10) {
-            System.out.println("第十条数据: " + String.join(", ", data.get(9)));
+            System.out.println("Tenth data entry: " + String.join(", ", data.get(9)));
         } else {
-            System.out.println("数据不足 10 条");
+            System.out.println("Less than 10 data entries available");
         }
-        System.out.println("总数据量: " + data.size());
-        System.out.println("数据来源: Department of Government Efficiency, Good job Musk");
+        System.out.println("Total number of entries: " + data.size());
+        System.out.println("Data source: Department of Government Efficiency, Good job Musk");
     }
 
     private static void createAndShowGUI(List<String[]> data) {
-        JFrame frame = new JFrame("联邦政府数据可视化");
+        JFrame frame = new JFrame("Federal Government Data Visualization");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1200, 700);
         frame.getContentPane().setBackground(Color.BLACK);
@@ -60,20 +60,20 @@ public class DataVisualization {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.BLACK);
 
-        // 过滤面板
+        // Filter panel
         JPanel filterPanel = new JPanel();
         filterPanel.setBackground(Color.BLACK);
         filterPanel.setLayout(new FlowLayout());
-        JLabel filterLabel = new JLabel("搜索:");
+        JLabel filterLabel = new JLabel("Search:");
         filterLabel.setForeground(Color.WHITE);
         JTextField filterField = new JTextField(15);
-        JButton filterButton = new JButton("筛选");
+        JButton filterButton = new JButton("Filter");
         filterPanel.add(filterLabel);
         filterPanel.add(filterField);
         filterPanel.add(filterButton);
 
-        // 表格面板
-        String[] columnNames = {"字段名称", "值"};
+        // Table panel
+        String[] columnNames = {"Field Name", "Value"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
         JTable table = new JTable(tableModel);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
@@ -96,20 +96,20 @@ public class DataVisualization {
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(filterPanel, BorderLayout.NORTH);
 
-        // 统计面板 (显示最大值、最小值、平均值、总和)
+        // Statistics panel (Displays Max, Min, Average, Sum)
         double max = data.stream().mapToDouble(row -> parseDouble(row[1])).max().orElse(0);
         double min = data.stream().mapToDouble(row -> parseDouble(row[1])).min().orElse(0);
         double avg = data.stream().mapToDouble(row -> parseDouble(row[1])).average().orElse(0);
         double sum = data.stream().mapToDouble(row -> parseDouble(row[1])).sum();
         
         String[][] statsData = {
-            {"最大值", formatNumber(String.valueOf(max))},
-            {"最小值", formatNumber(String.valueOf(min))},
-            {"平均值", formatNumber(String.valueOf(avg))},
-            {"总和", formatNumber(String.valueOf(sum))}
+            {"Max", formatNumber(String.valueOf(max))},
+            {"Min", formatNumber(String.valueOf(min))},
+            {"Average", formatNumber(String.valueOf(avg))},
+            {"Sum", formatNumber(String.valueOf(sum))}
         };
         
-        String[] statsColumns = {"统计项", "数值"};
+        String[] statsColumns = {"Statistic", "Value"};
         JTable statsTable = new JTable(new DefaultTableModel(statsData, statsColumns));
         statsTable.setBackground(Color.DARK_GRAY);
         statsTable.setForeground(Color.WHITE);
