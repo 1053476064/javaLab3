@@ -1,10 +1,3 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
-import org.jfree.chart.*;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.data.category.DefaultCategoryDataset;
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
@@ -12,6 +5,9 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 public class DataVisualization {
     public static void main(String[] args) {
@@ -60,7 +56,6 @@ public class DataVisualization {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 600);
 
-        // 创建主面板
         JPanel mainPanel = new JPanel(new BorderLayout());
         
         // 表格面板
@@ -97,20 +92,51 @@ public class DataVisualization {
             }
         });
 
-        // 图表面板
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (String[] row : data) {
-            if (row.length >= 2) {
-                try {
-                    dataset.addValue(Double.parseDouble(row[1]), "Value", row[0]);
-                } catch (NumberFormatException ignored) {}
-            }
-        }
-        JFreeChart barChart = ChartFactory.createBarChart("数据分布", "类别", "值", dataset, PlotOrientation.VERTICAL, false, true, false);
-        ChartPanel chartPanel = new ChartPanel(barChart);
+        // 自定义图表面板
+        ChartPanel chartPanel = new ChartPanel(data);
         mainPanel.add(chartPanel, BorderLayout.EAST);
 
         frame.add(mainPanel);
         frame.setVisible(true);
+    }
+}
+
+// 自定义柱状图面板
+class ChartPanel extends JPanel {
+    private final List<String[]> data;
+    
+    public ChartPanel(List<String[]> data) {
+        this.data = data;
+        this.setPreferredSize(new Dimension(300, 400));
+    }
+    
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+
+        int width = getWidth();
+        int height = getHeight();
+        int barWidth = width / Math.min(data.size(), 10);
+
+        int maxValue = data.stream().skip(1)
+                .mapToInt(row -> {
+                    try { return Integer.parseInt(row[1]); }
+                    catch (NumberFormatException e) { return 0; }
+                })
+                .max().orElse(1);
+
+        int x = 10;
+        for (int i = 0; i < Math.min(data.size(), 10); i++) {
+            try {
+                int value = Integer.parseInt(data.get(i)[1]);
+                int barHeight = (int) ((double) value / maxValue * (height - 50));
+                g2d.setColor(Color.BLUE);
+                g2d.fillRect(x, height - barHeight - 10, barWidth - 5, barHeight);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString(data.get(i)[0], x, height - 5);
+                x += barWidth;
+            } catch (NumberFormatException ignored) {}
+        }
     }
 }
