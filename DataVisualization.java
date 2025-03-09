@@ -96,15 +96,30 @@ public class DataVisualization {
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(filterPanel, BorderLayout.NORTH);
 
-        // 统计面板
+        // 统计面板 (显示最大值、最小值、平均值、总和)
         double max = data.stream().mapToDouble(row -> parseDouble(row[1])).max().orElse(0);
         double min = data.stream().mapToDouble(row -> parseDouble(row[1])).min().orElse(0);
         double avg = data.stream().mapToDouble(row -> parseDouble(row[1])).average().orElse(0);
-        JLabel statsLabel = new JLabel("最大值: " + max + " | 最小值: " + min + " | 平均值: " + avg);
-        statsLabel.setForeground(Color.WHITE);
+        double sum = data.stream().mapToDouble(row -> parseDouble(row[1])).sum();
+        
+        String[][] statsData = {
+            {"最大值", formatNumber(String.valueOf(max))},
+            {"最小值", formatNumber(String.valueOf(min))},
+            {"平均值", formatNumber(String.valueOf(avg))},
+            {"总和", formatNumber(String.valueOf(sum))}
+        };
+        
+        String[] statsColumns = {"统计项", "数值"};
+        JTable statsTable = new JTable(new DefaultTableModel(statsData, statsColumns));
+        statsTable.setBackground(Color.DARK_GRAY);
+        statsTable.setForeground(Color.WHITE);
+        statsTable.setGridColor(Color.LIGHT_GRAY);
+        JScrollPane statsScrollPane = new JScrollPane(statsTable);
+        statsScrollPane.setPreferredSize(new Dimension(400, 100));
+        
         JPanel statsPanel = new JPanel();
         statsPanel.setBackground(Color.BLACK);
-        statsPanel.add(statsLabel);
+        statsPanel.add(statsScrollPane);
         mainPanel.add(statsPanel, BorderLayout.SOUTH);
         
         filterButton.addActionListener((ActionEvent e) -> {
@@ -118,7 +133,7 @@ public class DataVisualization {
 
     private static String formatNumber(String numStr) {
         try {
-            long num = Long.parseLong(numStr);
+            double num = Double.parseDouble(numStr);
             if (num >= 1_000_000_000) {
                 return new DecimalFormat("0.0B").format(num / 1_000_000_000.0);
             } else if (num >= 1_000_000) {
