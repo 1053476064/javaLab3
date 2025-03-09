@@ -1,5 +1,5 @@
 import java.awt.*;
-import java.io.*;
+import java.awt.event.ActionEvent;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 
 public class DataVisualization {
@@ -23,19 +24,17 @@ public class DataVisualization {
         SwingUtilities.invokeLater(() -> createAndShowGUI(data));
     }
 
-    // 读取 CSV 文件
     private static List<String[]> readCSV(String filePath) {
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             return lines.skip(1) // 跳过表头
                     .map(line -> line.split(","))
                     .collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("文件读取失败: " + e.getMessage());
             return List.of();
         }
     }
 
-    // 控制台测试应用
     private static void consoleTest(List<String[]> data) {
         if (data.isEmpty()) {
             System.out.println("数据为空，无法进行测试");
@@ -52,21 +51,41 @@ public class DataVisualization {
         System.out.println("数据来源: Department of Government Efficiency, Good job Musk");
     }
 
-    // 创建 GUI 界面
     private static void createAndShowGUI(List<String[]> data) {
         JFrame frame = new JFrame("联邦政府数据可视化");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 600);
+        frame.setSize(1200, 700);
+        frame.getContentPane().setBackground(Color.BLACK);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
-        
+        mainPanel.setBackground(Color.BLACK);
+
+        // 过滤面板
+        JPanel filterPanel = new JPanel();
+        filterPanel.setBackground(Color.BLACK);
+        filterPanel.setLayout(new FlowLayout());
+        JLabel filterLabel = new JLabel("搜索:");
+        filterLabel.setForeground(Color.WHITE);
+        JTextField filterField = new JTextField(15);
+        JButton filterButton = new JButton("筛选");
+        filterPanel.add(filterLabel);
+        filterPanel.add(filterField);
+        filterPanel.add(filterButton);
+
         // 表格面板
         String[] columnNames = {"字段名称", "值"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
         JTable table = new JTable(tableModel);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        table.setRowHeight(25); // 提高行高，提升可读性
+        table.setRowHeight(25);
+        table.setBackground(Color.DARK_GRAY);
+        table.setForeground(Color.WHITE);
+        table.setGridColor(Color.LIGHT_GRAY);
+        
+        JTableHeader tableHeader = table.getTableHeader();
+        tableHeader.setBackground(Color.BLACK);
+        tableHeader.setForeground(Color.WHITE);
 
         for (String[] row : data) {
             if (row.length >= 2) {
@@ -75,35 +94,28 @@ public class DataVisualization {
         }
         JScrollPane scrollPane = new JScrollPane(table);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(filterPanel, BorderLayout.NORTH);
 
         // 统计面板
-        JLabel statsLabel = new JLabel("数据项总数: " + data.size());
+        double max = data.stream().mapToDouble(row -> parseDouble(row[1])).max().orElse(0);
+        double min = data.stream().mapToDouble(row -> parseDouble(row[1])).min().orElse(0);
+        double avg = data.stream().mapToDouble(row -> parseDouble(row[1])).average().orElse(0);
+        JLabel statsLabel = new JLabel("最大值: " + max + " | 最小值: " + min + " | 平均值: " + avg);
+        statsLabel.setForeground(Color.WHITE);
         JPanel statsPanel = new JPanel();
+        statsPanel.setBackground(Color.BLACK);
         statsPanel.add(statsLabel);
-        mainPanel.add(statsPanel, BorderLayout.NORTH);
+        mainPanel.add(statsPanel, BorderLayout.SOUTH);
         
-        // 详细信息面板
-        JTextArea detailsText = new JTextArea(5, 50);
-        detailsText.setEditable(false);
-        JScrollPane detailsScroll = new JScrollPane(detailsText);
-        mainPanel.add(detailsScroll, BorderLayout.SOUTH);
-        
-        table.getSelectionModel().addListSelectionListener(event -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                detailsText.setText("详情:\n" + tableModel.getValueAt(selectedRow, 0) + ": " + tableModel.getValueAt(selectedRow, 1));
-            }
+        filterButton.addActionListener((ActionEvent e) -> {
+            String text = filterField.getText();
+            sorter.setRowFilter(RowFilter.regexFilter(text));
         });
-
-        // 自定义图表面板
-        ChartPanel chartPanel = new ChartPanel(data);
-        mainPanel.add(chartPanel, BorderLayout.EAST);
 
         frame.add(mainPanel);
         frame.setVisible(true);
     }
-    
-    // 格式化大数值数据
+
     private static String formatNumber(String numStr) {
         try {
             long num = Long.parseLong(numStr);
@@ -120,48 +132,12 @@ public class DataVisualization {
             return numStr;
         }
     }
-}
 
-// 自定义柱状图面板
-class ChartPanel extends JPanel {
-    private final List<String[]> data;
-    
-    public ChartPanel(List<String[]> data) {
-        this.data = data;
-        this.setPreferredSize(new Dimension(350, 400));
-    }
-    
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font("SansSerif", Font.PLAIN, 10));
-
-        int width = getWidth();
-        int height = getHeight();
-        int barWidth = width / Math.min(data.size(), 10);
-
-        int maxValue = data.stream().skip(1)
-                .mapToInt(row -> {
-                    try { return Integer.parseInt(row[1]); }
-                    catch (NumberFormatException e) { return 0; }
-                })
-                .max().orElse(1);
-
-        int x = 10;
-        for (int i = 0; i < Math.min(data.size(), 10); i++) {
-            try {
-                int value = Integer.parseInt(data.get(i)[1]);
-                int barHeight = (int) ((double) value / maxValue * (height - 50));
-                g2d.setColor(new Color(0, 0, 255 - (i * 20)));
-                g2d.fillRect(x, height - barHeight - 10, barWidth - 5, barHeight);
-                g2d.setColor(Color.BLACK);
-                g2d.drawRect(x, height - barHeight - 10, barWidth - 5, barHeight);
-                if (i % 2 == 0) {
-                    g2d.drawString(data.get(i)[0], x, height - 5);
-                }
-                x += barWidth;
-            } catch (NumberFormatException ignored) {}
+    private static double parseDouble(String numStr) {
+        try {
+            return Double.parseDouble(numStr);
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
 }
