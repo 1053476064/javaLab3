@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -64,6 +65,7 @@ public class DataVisualization {
         JTable table = new JTable(tableModel);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
+        table.setRowHeight(25); // 提高行高，提升可读性
 
         for (String[] row : data) {
             if (row.length >= 2) {
@@ -107,7 +109,7 @@ class ChartPanel extends JPanel {
     
     public ChartPanel(List<String[]> data) {
         this.data = data;
-        this.setPreferredSize(new Dimension(300, 400));
+        this.setPreferredSize(new Dimension(350, 400));
     }
     
     @Override
@@ -133,8 +135,13 @@ class ChartPanel extends JPanel {
                 int barHeight = (int) ((double) value / maxValue * (height - 50));
                 g2d.setColor(Color.BLUE);
                 g2d.fillRect(x, height - barHeight - 10, barWidth - 5, barHeight);
-                g2d.setColor(Color.BLACK);
+                
+                // 旋转 X 轴文本
+                AffineTransform original = g2d.getTransform();
+                g2d.setTransform(AffineTransform.getRotateInstance(-Math.PI / 4, x + barWidth / 2, height - 5));
                 g2d.drawString(data.get(i)[0], x, height - 5);
+                g2d.setTransform(original);
+                
                 x += barWidth;
             } catch (NumberFormatException ignored) {}
         }
