@@ -1,8 +1,8 @@
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,6 +49,7 @@ public class DataVisualization {
             System.out.println("数据不足 10 条");
         }
         System.out.println("总数据量: " + data.size());
+        System.out.println("数据来源: Department of Government Efficiency, Good job Musk");
     }
 
     // 创建 GUI 界面
@@ -69,7 +70,7 @@ public class DataVisualization {
 
         for (String[] row : data) {
             if (row.length >= 2) {
-                tableModel.addRow(new String[]{row[0], row[1]});
+                tableModel.addRow(new String[]{row[0], formatNumber(row[1])});
             }
         }
         JScrollPane scrollPane = new JScrollPane(table);
@@ -101,6 +102,24 @@ public class DataVisualization {
         frame.add(mainPanel);
         frame.setVisible(true);
     }
+    
+    // 格式化大数值数据
+    private static String formatNumber(String numStr) {
+        try {
+            long num = Long.parseLong(numStr);
+            if (num >= 1_000_000_000) {
+                return new DecimalFormat("0.0B").format(num / 1_000_000_000.0);
+            } else if (num >= 1_000_000) {
+                return new DecimalFormat("0.0M").format(num / 1_000_000.0);
+            } else if (num >= 1_000) {
+                return new DecimalFormat("0.0K").format(num / 1_000.0);
+            } else {
+                return numStr;
+            }
+        } catch (NumberFormatException e) {
+            return numStr;
+        }
+    }
 }
 
 // 自定义柱状图面板
@@ -116,6 +135,7 @@ class ChartPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        g2d.setFont(new Font("SansSerif", Font.PLAIN, 10));
 
         int width = getWidth();
         int height = getHeight();
@@ -133,15 +153,13 @@ class ChartPanel extends JPanel {
             try {
                 int value = Integer.parseInt(data.get(i)[1]);
                 int barHeight = (int) ((double) value / maxValue * (height - 50));
-                g2d.setColor(Color.BLUE);
+                g2d.setColor(new Color(0, 0, 255 - (i * 20)));
                 g2d.fillRect(x, height - barHeight - 10, barWidth - 5, barHeight);
-                
-                // 旋转 X 轴文本
-                AffineTransform original = g2d.getTransform();
-                g2d.setTransform(AffineTransform.getRotateInstance(-Math.PI / 4, x + barWidth / 2, height - 5));
-                g2d.drawString(data.get(i)[0], x, height - 5);
-                g2d.setTransform(original);
-                
+                g2d.setColor(Color.BLACK);
+                g2d.drawRect(x, height - barHeight - 10, barWidth - 5, barHeight);
+                if (i % 2 == 0) {
+                    g2d.drawString(data.get(i)[0], x, height - 5);
+                }
                 x += barWidth;
             } catch (NumberFormatException ignored) {}
         }
