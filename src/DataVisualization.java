@@ -6,10 +6,10 @@ public class DataVisualization {
         String filePath = "org-data-Federal_Government.csv";
         List<String[]> data = DataLoader.readCSV(filePath);
         
-        // 控制台测试数据
+        // Run a console test to check the data
         ConsoleTest.runTest(data);
         
-        // 启动图形界面
+        // Launch the GUI on the Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
             DataVisualizationFrame frame = new DataVisualizationFrame(data);
             frame.setVisible(true);

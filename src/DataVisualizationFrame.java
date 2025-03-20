@@ -12,7 +12,7 @@ public class DataVisualizationFrame extends JFrame {
     private StatsPanel statsPanel;
     private ChartPanel chartPanel;
     private DetailsPanel detailsPanel;
-    private List<String[]> rawData; // 全部原始数据
+    private List<String[]> rawData; // All original data
 
     public DataVisualizationFrame(List<String[]> data) {
         super("Federal Government Data Visualization");
@@ -21,33 +21,33 @@ public class DataVisualizationFrame extends JFrame {
         this.setSize(1200, 700);
         this.getContentPane().setBackground(Color.BLACK);
         
-        // 初始化各个面板
+        // Initialize all panels
         filterPanel = new FilterPanel();
         tablePanel = new TablePanel(data);
         statsPanel = new StatsPanel(data);
         chartPanel = new ChartPanel(data);
         detailsPanel = new DetailsPanel();
         
-        // 左侧：表格和详情（上下分割）
+        // Left side: Table and Details (vertical split)
         JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tablePanel, detailsPanel);
         leftSplit.setDividerLocation(400);
         
-        // 右侧：统计与图表（上下分割）
+        // Right side: Stats and Chart (vertical split)
         JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, statsPanel, chartPanel);
         rightSplit.setDividerLocation(200);
         
-        // 主分割面板：左右分割
+        // Main split pane: left and right
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, rightSplit);
         mainSplit.setDividerLocation(700);
         
-        // 主面板
+        // Main panel with border layout
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.BLACK);
         mainPanel.add(filterPanel, BorderLayout.NORTH);
         mainPanel.add(mainSplit, BorderLayout.CENTER);
         this.add(mainPanel);
         
-        // 添加表格选中行监听器，更新详情面板
+        // Add a listener to update the details panel when a table row is selected.
         tablePanel.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -62,20 +62,20 @@ public class DataVisualizationFrame extends JFrame {
             }
         });
         
-        // 过滤按钮动作：构造多个 RowFilter，并更新表格、统计和图表
+        // Set up filter actions: apply or reset filters and update other panels.
         filterPanel.getApplyButton().addActionListener(e -> applyFilters());
         filterPanel.getResetButton().addActionListener(e -> resetFilters());
     }
     
-    // 根据过滤面板中输入的条件构造 RowFilter
+    // Build a combined RowFilter based on filter inputs.
     private void applyFilters() {
         List<RowFilter<Object, Object>> filters = new ArrayList<>();
-        // 过滤名称（第一列）
+        // Filter by name (first column)
         String nameText = filterPanel.getNameFilterField().getText().trim();
         if (!nameText.isEmpty()) {
             filters.add(RowFilter.regexFilter("(?i)" + nameText, 0));
         }
-        // 过滤最小值（隐藏列，索引为 1 之后隐藏的第三列为模型中的索引 2）
+        // Filter by minimum value (hidden column at model index 2)
         String minText = filterPanel.getMinValueField().getText().trim();
         if (!minText.isEmpty()) {
             try {
@@ -88,10 +88,10 @@ public class DataVisualizationFrame extends JFrame {
                     }
                 });
             } catch (NumberFormatException ex) {
-                // 忽略无效输入
+                // Ignore invalid input.
             }
         }
-        // 过滤最大值
+        // Filter by maximum value
         String maxText = filterPanel.getMaxValueField().getText().trim();
         if (!maxText.isEmpty()) {
             try {
@@ -104,7 +104,7 @@ public class DataVisualizationFrame extends JFrame {
                     }
                 });
             } catch (NumberFormatException ex) {
-                // 忽略无效输入
+                // Ignore invalid input.
             }
         }
         
@@ -113,7 +113,7 @@ public class DataVisualizationFrame extends JFrame {
         updateLinkedPanels();
     }
     
-    // 清除过滤条件
+    // Clear all filter inputs and reset the table filter.
     private void resetFilters() {
         filterPanel.getNameFilterField().setText("");
         filterPanel.getMinValueField().setText("");
@@ -122,7 +122,7 @@ public class DataVisualizationFrame extends JFrame {
         updateLinkedPanels();
     }
     
-    // 根据当前表格过滤结果更新统计面板和图表面板
+    // Update the statistics and chart panels based on the current filtered data.
     private void updateLinkedPanels() {
         List<String[]> filteredData = tablePanel.getFilteredRawData();
         statsPanel.updateData(filteredData);

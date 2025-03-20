@@ -17,7 +17,7 @@ public class DetailsPanel extends JPanel {
         this.add(scrollPane, BorderLayout.CENTER);
     }
     
-    // 根据传入数据更新详情显示
+    // Update the details area with data from the selected row.
     public void updateDetails(String[] rowData) {
         if (rowData == null) {
             detailsArea.setText("");
@@ -25,7 +25,7 @@ public class DetailsPanel extends JPanel {
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < rowData.length; i++) {
-            sb.append("属性 ").append(i + 1).append(": ").append(rowData[i]).append("\n");
+            sb.append("Attribute ").append(i + 1).append(": ").append(rowData[i]).append("\n");
         }
         detailsArea.setText(sb.toString());
     }
