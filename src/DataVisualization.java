@@ -1,5 +1,5 @@
-import javax.swing.*;
 import java.util.List;
+import javax.swing.*;
 
 public class DataVisualization {
     public static void main(String[] args) {
@@ -9,7 +9,7 @@ public class DataVisualization {
         // 控制台测试数据
         ConsoleTest.runTest(data);
         
-        // 启动图形用户界面
+        // 启动图形界面
         SwingUtilities.invokeLater(() -> {
             DataVisualizationFrame frame = new DataVisualizationFrame(data);
             frame.setVisible(true);
