@@ -10,7 +10,7 @@ public class TablePanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
-    // 保存原始数据（顺序与模型行对应）
+    // Keep original raw data (each row corresponds to the table model row)
     private List<String[]> rawData;
 
     public TablePanel(List<String[]> data) {
@@ -18,7 +18,7 @@ public class TablePanel extends JPanel {
         this.setBackground(Color.BLACK);
         this.rawData = data;
         
-        // 三列：Field Name, Formatted Value, Raw Value（隐藏）
+        // Three columns: Field Name, Formatted Value, and Raw Value (hidden)
         String[] columnNames = {"Field Name", "Value", "Raw Value"};
         tableModel = new DefaultTableModel(columnNames, 0);
         table = new JTable(tableModel);
@@ -35,7 +35,7 @@ public class TablePanel extends JPanel {
         tableHeader.setBackground(Color.BLACK);
         tableHeader.setForeground(Color.WHITE);
         
-        // 填充数据：隐藏列存储数值的原始 double 值
+        // Fill the table. The hidden column stores the raw numeric value.
         for (String[] row : data) {
             if (row.length >= 2) {
                 Object[] rowData = new Object[3];
@@ -46,7 +46,7 @@ public class TablePanel extends JPanel {
             }
         }
         
-        // 隐藏第三列（Raw Value）
+        // Hide the third column (raw value)
         table.removeColumn(table.getColumnModel().getColumn(2));
         
         JScrollPane scrollPane = new JScrollPane(table);
@@ -61,7 +61,7 @@ public class TablePanel extends JPanel {
         return sorter;
     }
     
-    // 返回过滤后对应的原始数据（注意：模型行索引与原始数据下标对应）
+    // Get the raw data corresponding to the filtered table rows
     public List<String[]> getFilteredRawData() {
         List<String[]> filtered = new ArrayList<>();
         for (int i = 0; i < table.getRowCount(); i++) {

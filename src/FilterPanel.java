@@ -12,20 +12,20 @@ public class FilterPanel extends JPanel {
         this.setBackground(Color.BLACK);
         this.setLayout(new FlowLayout());
         
-        JLabel nameLabel = new JLabel("名称包含：");
+        JLabel nameLabel = new JLabel("Name contains:");
         nameLabel.setForeground(Color.WHITE);
         nameFilterField = new JTextField(10);
         
-        JLabel minLabel = new JLabel("最小值：");
+        JLabel minLabel = new JLabel("Min value:");
         minLabel.setForeground(Color.WHITE);
         minValueField = new JTextField(5);
         
-        JLabel maxLabel = new JLabel("最大值：");
+        JLabel maxLabel = new JLabel("Max value:");
         maxLabel.setForeground(Color.WHITE);
         maxValueField = new JTextField(5);
         
-        applyButton = new JButton("应用过滤");
-        resetButton = new JButton("清除过滤");
+        applyButton = new JButton("Apply Filter");
+        resetButton = new JButton("Reset Filter");
         
         this.add(nameLabel);
         this.add(nameFilterField);

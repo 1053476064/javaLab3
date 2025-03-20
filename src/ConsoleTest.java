@@ -1,6 +1,7 @@
 import java.util.List;
 
 public class ConsoleTest {
+    // Print out some data to the console for testing purposes.
     public static void runTest(List<String[]> data) {
         if (data.isEmpty()) {
             System.out.println("No data available for testing");

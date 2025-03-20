@@ -23,7 +23,7 @@ public class StatsPanel extends JPanel {
         this.add(statsScrollPane);
     }
     
-    // 计算统计数据：最大值、最小值、平均值、总和
+    // Calculate statistics: max, min, average, and sum.
     private String[][] calculateStats(List<String[]> data) {
         double max = data.stream().mapToDouble(row -> DataUtil.parseDouble(row[1])).max().orElse(0);
         double min = data.stream().mapToDouble(row -> DataUtil.parseDouble(row[1])).min().orElse(0);
@@ -38,7 +38,7 @@ public class StatsPanel extends JPanel {
         };
     }
     
-    // 更新统计数据
+    // Update statistics when filtered data changes.
     public void updateData(List<String[]> newData) {
         String[][] newStats = calculateStats(newData);
         statsModel.setDataVector(newStats, new Object[]{"Statistic", "Value"});

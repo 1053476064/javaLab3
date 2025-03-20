@@ -1,6 +1,7 @@
 import java.text.DecimalFormat;
 
 public class DataUtil {
+    // Format a number string: add suffixes like K, M, or B if the number is large.
     public static String formatNumber(String numStr) {
         try {
             double num = Double.parseDouble(numStr);
@@ -18,6 +19,7 @@ public class DataUtil {
         }
     }
 
+    // Safely convert a string to a double value. Returns 0 if parsing fails.
     public static double parseDouble(String numStr) {
         try {
             return Double.parseDouble(numStr);

@@ -5,9 +5,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DataLoader {
+    // Read the CSV file and return a list of rows (each row is an array of strings)
     public static List<String[]> readCSV(String filePath) {
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-            return lines.skip(1) // 跳过标题行
+            // Skip the header and split each line by commas
+            return lines.skip(1)
                     .map(line -> line.split(","))
                     .collect(Collectors.toList());
         } catch (Exception e) {
