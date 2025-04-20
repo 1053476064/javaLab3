@@ -1,131 +1,84 @@
-import javax.swing.*;
-import javax.swing.RowFilter;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.util.ArrayList;
+import java.awt.event.ActionEvent;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
+/**
+ * GUI frame for displaying the data table, filter, stats and chart.
+ */
 public class DataVisualizationFrame extends JFrame {
-    private FilterPanel filterPanel;
-    private TablePanel tablePanel;
-    private StatsPanel statsPanel;
-    private ChartPanel chartPanel;
-    private DetailsPanel detailsPanel;
-    private List<String[]> rawData; // All original data
-
     public DataVisualizationFrame(List<String[]> data) {
         super("Federal Government Data Visualization");
-        this.rawData = data;
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(1200, 700);
-        this.getContentPane().setBackground(Color.BLACK);
-        
-        // Initialize all panels
-        filterPanel = new FilterPanel();
-        tablePanel = new TablePanel(data);
-        statsPanel = new StatsPanel(data);
-        chartPanel = new ChartPanel(data);
-        detailsPanel = new DetailsPanel();
-        
-        // Left side: Table and Details (vertical split)
-        JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tablePanel, detailsPanel);
-        leftSplit.setDividerLocation(400);
-        
-        // Right side: Stats and Chart (vertical split)
-        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, statsPanel, chartPanel);
-        rightSplit.setDividerLocation(200);
-        
-        // Main split pane: left and right
-        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, rightSplit);
-        mainSplit.setDividerLocation(700);
-        
-        // Main panel with border layout
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1200, 700);
+        getContentPane().setBackground(Color.BLACK);
+
+        // Main layout
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.BLACK);
+
+        // --- Filter Panel ---
+        JPanel filterPanel = new JPanel(new FlowLayout());
+        filterPanel.setBackground(Color.BLACK);
+        JLabel filterLabel = new JLabel("Search:");
+        filterLabel.setForeground(Color.WHITE);
+        JTextField filterField = new JTextField(15);
+        filterField.setForeground(Color.WHITE);
+        filterField.setBackground(Color.DARK_GRAY);
+        JButton filterButton = new JButton("Filter");
+        filterPanel.add(filterLabel);
+        filterPanel.add(filterField);
+        filterPanel.add(filterButton);
+
+        // --- Table Panel ---
+        String[] columns = {"Field Name", "Value"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
+        JTable table = new JTable(tableModel);
+        table.setBackground(Color.DARK_GRAY);
+        table.setForeground(Color.WHITE);
+        table.setRowHeight(25);
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
+        // Load data
+        for (String[] row : data) {
+            if (row.length >= 2) {
+                tableModel.addRow(new String[]{row[0], row[1]});
+            }
+        }
+        JScrollPane tableScroll = new JScrollPane(table);
+
         mainPanel.add(filterPanel, BorderLayout.NORTH);
-        mainPanel.add(mainSplit, BorderLayout.CENTER);
-        this.add(mainPanel);
-        
-        // Add a listener to update the details panel when a table row is selected.
-        tablePanel.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    int selectedRow = tablePanel.getTable().getSelectedRow();
-                    if (selectedRow >= 0) {
-                        int modelIndex = tablePanel.getTable().convertRowIndexToModel(selectedRow);
-                        String[] rowData = rawData.get(modelIndex);
-                        detailsPanel.updateDetails(rowData);
-                    }
-                }
-            }
+        mainPanel.add(tableScroll, BorderLayout.CENTER);
+
+        // --- Observer Setup ---
+        DataFilterSubject subject = new DataFilterSubject();
+        ChartPanel chartObserver = new ChartPanel(data);
+        StatsObserver statsObserver = new StatsObserver(data);
+        subject.addObserver(statsObserver);
+        subject.addObserver(chartObserver);
+
+        // Add stats and chart panels
+        mainPanel.add(statsObserver.getPanel(), BorderLayout.SOUTH);
+        mainPanel.add(chartObserver, BorderLayout.EAST);
+
+        // --- Filter Action ---
+        filterButton.addActionListener((ActionEvent e) -> {
+            String text = filterField.getText();
+            sorter.setRowFilter(RowFilter.regexFilter(text));
+            // Collect filtered data from table
+            List<String[]> filtered = IntStream.range(0, table.getRowCount())
+                .mapToObj(i -> new String[]{
+                    table.getValueAt(i, 0).toString(),
+                    table.getValueAt(i, 1).toString()
+                })
+                .collect(Collectors.toList());
+            subject.notifyObservers(filtered);
         });
-        
-        // Set up filter actions: apply or reset filters and update other panels.
-        filterPanel.getApplyButton().addActionListener(e -> applyFilters());
-        filterPanel.getResetButton().addActionListener(e -> resetFilters());
-    }
-    
-    // Build a combined RowFilter based on filter inputs.
-    private void applyFilters() {
-        List<RowFilter<Object, Object>> filters = new ArrayList<>();
-        // Filter by name (first column)
-        String nameText = filterPanel.getNameFilterField().getText().trim();
-        if (!nameText.isEmpty()) {
-            filters.add(RowFilter.regexFilter("(?i)" + nameText, 0));
-        }
-        // Filter by minimum value (hidden column at model index 2)
-        String minText = filterPanel.getMinValueField().getText().trim();
-        if (!minText.isEmpty()) {
-            try {
-                double minVal = Double.parseDouble(minText);
-                filters.add(new RowFilter<Object, Object>() {
-                    @Override
-                    public boolean include(Entry<? extends Object, ? extends Object> entry) {
-                        Double value = (Double) entry.getValue(2);
-                        return value >= minVal;
-                    }
-                });
-            } catch (NumberFormatException ex) {
-                // Ignore invalid input.
-            }
-        }
-        // Filter by maximum value
-        String maxText = filterPanel.getMaxValueField().getText().trim();
-        if (!maxText.isEmpty()) {
-            try {
-                double maxVal = Double.parseDouble(maxText);
-                filters.add(new RowFilter<Object, Object>() {
-                    @Override
-                    public boolean include(Entry<? extends Object, ? extends Object> entry) {
-                        Double value = (Double) entry.getValue(2);
-                        return value <= maxVal;
-                    }
-                });
-            } catch (NumberFormatException ex) {
-                // Ignore invalid input.
-            }
-        }
-        
-        RowFilter<Object, Object> combinedFilter = filters.isEmpty() ? null : RowFilter.andFilter(filters);
-        tablePanel.getSorter().setRowFilter(combinedFilter);
-        updateLinkedPanels();
-    }
-    
-    // Clear all filter inputs and reset the table filter.
-    private void resetFilters() {
-        filterPanel.getNameFilterField().setText("");
-        filterPanel.getMinValueField().setText("");
-        filterPanel.getMaxValueField().setText("");
-        tablePanel.getSorter().setRowFilter(null);
-        updateLinkedPanels();
-    }
-    
-    // Update the statistics and chart panels based on the current filtered data.
-    private void updateLinkedPanels() {
-        List<String[]> filteredData = tablePanel.getFilteredRawData();
-        statsPanel.updateData(filteredData);
-        chartPanel.updateData(filteredData);
+
+        setContentPane(mainPanel);
     }
 }
